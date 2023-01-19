@@ -1,0 +1,7 @@
+{
+  "network": "goerli",
+  "registrar_address": "0xfE7531615E2920ACC7c9D334C50796Ea0508d868",
+  "start_block": 8282769,
+  "hub_address": "0x53c1B5be488d875BA49C6A90069E2fd8975Fd2ce",
+  "hub_start_block": 8282762
+}

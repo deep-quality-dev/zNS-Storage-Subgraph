@@ -1,0 +1,34 @@
+{
+  "name": "zNS-storage-subgraph",
+  "license": "MIT",
+  "scripts": {
+    "prepare:goerli": "mustache config/goerli.json subgraph.template.yaml > subgraph.yaml && mustache config/goerli.json src/defaultRegistrar.ts.template > src/defaultRegistrar.ts",
+    "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml && mustache config/mainnet.json src/defaultRegistrar.ts.template > src/defaultRegistrar.ts",
+    "deploy:goerli": "yarn prepare:goerli && yarn internal:deploy",
+    "deploy:mainnet": "yarn prepare:mainnet && yarn internal:deploy",
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "internal:deploy": "graph codegen && graph deploy --node https://api.thegraph.com/deploy/ --ipfs https://api.thegraph.com/ipfs/",
+    "auth": "graph auth --node https://api.thegraph.com/deploy/",
+    "create-local": "graph create --node http://localhost:8020/",
+    "remove-local": "graph remove --node http://localhost:8020/",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001",
+    "lint": "eslint --max-warnings 0 \"src/*.{js,ts}\"",
+    "lint-fix": "yarn lint --fix"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.37.6",
+    "@graphprotocol/graph-ts": "^0.29.1",
+    "assemblyscript-regex": "^1.6.4"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.19.0",
+    "@typescript-eslint/parser": "^4.19.0",
+    "eslint": "^7.22.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-plugin-prettier": "^3.3.1",
+    "mustache": "^4.2.0",
+    "prettier": "^2.2.1",
+    "typescript": "^4.2.3"
+  }
+}

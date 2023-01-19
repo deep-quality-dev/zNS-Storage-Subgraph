@@ -1,0 +1,128 @@
+interface Blockstamp {
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+}
+
+type DomainRecord implements Blockstamp @entity {
+  id: ID!
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+
+  domainId: BigInt!
+  name: String
+  label: String
+  minter: Bytes
+  metadataLocked: Boolean
+  metadataLockedBy: Bytes
+  controller: Bytes
+  royaltyAmount: BigInt
+  parentId: DomainRecord
+  subdomainContract: RegistrarContract
+  domainGroup: DomainGroup
+  domainGroupFileIndex: BigInt
+}
+
+type DomainGroup implements Blockstamp @entity {
+  id: ID!
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+
+  groupId: BigInt!
+  registrar: RegistrarContract!
+  baseMetadataUri: String!
+}
+
+type Controller implements Blockstamp @entity {
+  id: ID!
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+
+  registrar: RegistrarContract!
+  controller: Bytes
+  exists: Boolean
+}
+
+type RegistrarContract implements Blockstamp @entity {
+  id: ID!
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+
+  rootDomain: DomainRecord
+  controllers: [Controller!] @derivedFrom(field: "registrar")
+  records: [DomainRecord!] @derivedFrom(field: "subdomainContract")
+  domainGroups: [DomainGroup!] @derivedFrom(field: "registrar")
+}
+
+type Account @entity {
+  id: ID!
+}
+
+type DomainTransfer implements Blockstamp @entity {
+  id: ID!
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+
+  from: Account!
+  to: Account!
+  tokenId: BigInt!
+}
+
+type DomainApproval implements Blockstamp @entity {
+  id: ID!
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+
+  owner: Account!
+  approved: Account!
+  tokenId: BigInt!
+}
+
+type DomainApprovalForAll implements Blockstamp @entity {
+  id: ID!
+  blockNumber: Int!
+  blockHash: Bytes!
+  blockTimestamp: BigInt!
+  txHash: Bytes!
+  txFrom: Bytes!
+  txTo: Bytes
+  value: BigInt!
+
+  owner: Account!
+  operator: Account!
+  approved: Boolean
+}

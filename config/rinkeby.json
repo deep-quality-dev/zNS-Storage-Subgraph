@@ -1,0 +1,7 @@
+{
+  "network": "rinkeby",
+  "registrar_address": "0xa4F6C921f914ff7972D7C55c15f015419326e0Ca",
+  "start_block": 10021911,
+  "hub_address": "0x90098737eB7C3e73854daF1Da20dFf90d521929a",
+  "hub_start_block": 10260331
+}

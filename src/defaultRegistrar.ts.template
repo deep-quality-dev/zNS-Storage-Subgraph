@@ -1,0 +1,4 @@
+import { Address } from "@graphprotocol/graph-ts";
+export function getDefaultRegistrarForNetwork(): Address {
+  return Address.fromString("{{registrar_address}}");
+}

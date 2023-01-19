@@ -1,0 +1,80 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+features:
+  - ipfsOnEthereumContracts
+dataSources:
+  - kind: ethereum/contract
+    name: Registrar
+    # prettier-ignore
+    network: {{ network }}
+    source:
+      address: "{{registrar_address}}"
+      abi: Registrar
+      # prettier-ignore
+      startBlock: {{ start_block }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - DomainRecord
+        - DomainGroup
+        - Controller
+        - RegistrarContract
+        - Account
+        - DomainTransfer
+      abis:
+        - name: Registrar
+          file: ./abis/Registrar.json
+      eventHandlers:
+        - event: ControllerAdded(indexed address)
+          handler: handleControllerAdded
+        - event: ControllerRemoved(indexed address)
+          handler: handleControllerRemoved
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleDomainTransfer
+        - event: Approval(indexed address,indexed address,indexed uint256)
+          handler: handleDomainApproval
+        - event: ApprovalForAll(indexed address,indexed address,bool)
+          handler: handleDomainApprovalForAll
+      file: ./src/registrar.ts
+  - kind: ethereum/contract
+    name: ZNSHub
+    # prettier-ignore
+    network: {{ network }}
+    source:
+      address: "{{hub_address}}"
+      abi: ZNSHub
+      # prettier-ignore
+      startBlock: {{ hub_start_block }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - DomainRecord
+        - DomainGroup
+        - Controller
+        - RegistrarContract
+      abis:
+        - name: ZNSHub
+          file: ./abis/ZNSHub.json
+        - name: Registrar
+          file: ./abis/Registrar.json
+      eventHandlers:
+        - event: EEDomainCreatedV3(address,indexed uint256,string,indexed uint256,indexed uint256,address,address,string,uint256,uint256,uint256)
+          handler: handleDomainCreatedV3
+        # - event: EEMetadataChanged(address,indexed uint256,string)
+        #   handler: handleMetadataChanged
+        - event: EEMetadataLockChanged(address,indexed uint256,address,bool)
+          handler: handleMetadataLockChanged
+        - event: EENewSubdomainRegistrar(address,uint256,address)
+          handler: handleNewSubdomainRegistrar
+        - event: EERoyaltiesAmountChanged(address,indexed uint256,uint256)
+          handler: handleRoyaltiesAmountChanged
+        # - event: EETransferV1(address,indexed address,indexed address,indexed uint256)
+        #   handler: handleTransferV1
+        - event: EEDomainGroupUpdatedV1(address,uint256,string)
+          handler: handleDomainGroupUpdatedV1
+      file: ./src/hub.ts
