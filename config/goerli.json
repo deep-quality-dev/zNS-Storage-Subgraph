@@ -1,7 +1,7 @@
 {
   "network": "goerli",
-  "registrar_address": "0xfE7531615E2920ACC7c9D334C50796Ea0508d868",
-  "start_block": 8282769,
-  "hub_address": "0x53c1B5be488d875BA49C6A90069E2fd8975Fd2ce",
-  "hub_start_block": 8282762
+  "registrar_address": "0x009A11617dF427319210e842D6B202f3831e0116",
+  "start_block": 7730587,
+  "hub_address": "0xce1fE2DA169C313Eb00a2bad25103D2B9617b5e1",
+  "hub_start_block": 7746518
 }

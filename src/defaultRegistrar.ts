@@ -1,4 +1,8 @@
-import { Address } from "@graphprotocol/graph-ts";
+import { Address, BigInt } from "@graphprotocol/graph-ts";
 export function getDefaultRegistrarForNetwork(): Address {
-  return Address.fromString("0xfE7531615E2920ACC7c9D334C50796Ea0508d868");
+  return Address.fromString("0xc2e9678A71e50E5AEd036e00e9c5caeb1aC5987D");
+}
+
+export function getDefaultRegistrarBlockForNetwork(): BigInt {
+  return BigInt.fromI32(12562654);
 }

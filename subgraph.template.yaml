@@ -27,7 +27,23 @@ dataSources:
       abis:
         - name: Registrar
           file: ./abis/Registrar.json
+      blockHandlers:
+        - handler: handleBlock
       eventHandlers:
+        - event: DomainCreated(indexed uint256,string,indexed uint256,indexed uint256,address,address)
+          handler: handleDomainCreatedLegacy
+        - event: DomainCreated(indexed uint256,string,indexed uint256,indexed uint256,address,address,string,uint256)
+          handler: handleDomainCreated
+        - event: MetadataChanged(indexed uint256,string)
+          handler: handleMetadataChanged
+        - event: MetadataLockChanged(indexed uint256,address,bool)
+          handler: handleMetadataLockChanged
+        - event: MetadataLocked(indexed uint256,address)
+          handler: handleMetadataLocked
+        - event: MetadataUnlocked(indexed uint256)
+          handler: handleMetadataUnlocked
+        - event: RoyaltiesAmountChanged(indexed uint256,uint256)
+          handler: handleRoyaltiesAmountChanged
         - event: ControllerAdded(indexed address)
           handler: handleControllerAdded
         - event: ControllerRemoved(indexed address)
@@ -63,6 +79,8 @@ dataSources:
         - name: Registrar
           file: ./abis/Registrar.json
       eventHandlers:
+        - event: EEDomainCreatedV2(address,indexed uint256,string,indexed uint256,indexed uint256,address,address,string,uint256)
+          handler: handleDomainCreatedV2
         - event: EEDomainCreatedV3(address,indexed uint256,string,indexed uint256,indexed uint256,address,address,string,uint256,uint256,uint256)
           handler: handleDomainCreatedV3
         # - event: EEMetadataChanged(address,indexed uint256,string)

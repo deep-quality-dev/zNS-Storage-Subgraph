@@ -1,4 +1,6 @@
 import { Address, BigInt, ByteArray, Bytes, ethereum } from "@graphprotocol/graph-ts";
+import { Registrar, Registrar__recordsResult } from "../generated/Registrar/Registrar";
+import { DomainRecord } from "../generated/schema";
 
 export const ADDRESS_ZERO = Address.zero();
 
@@ -43,3 +45,39 @@ export function transferId(event: ethereum.Event): string {
 
 export const approvalId = transferId;
 export const approvalForAllId = transferId;
+
+export function updateDomainRecordBlockStamp(
+  domainRecord: DomainRecord,
+  event: ethereum.Event,
+): void {
+  // Fill Blockstamp
+  domainRecord.blockNumber = event.block.number.toI32();
+  domainRecord.blockHash = event.block.hash;
+  domainRecord.blockTimestamp = event.block.timestamp;
+  domainRecord.txHash = event.transaction.hash;
+  domainRecord.txFrom = event.transaction.from;
+  domainRecord.txTo = event.transaction.to;
+  domainRecord.value = event.transaction.value;
+}
+
+export function updateDomainRecord(
+  domainRecord: DomainRecord,
+  event: ethereum.Event,
+  registrar: Address,
+): void {
+  updateDomainRecordBlockStamp(domainRecord, event);
+
+  const registrarInstance = Registrar.bind(registrar);
+  const record = registrarInstance.records(domainRecord.domainId);
+  domainRecord.minter = record.value0;
+  domainRecord.metadataLocked = record.value1;
+  domainRecord.metadataLockedBy = record.value2;
+  domainRecord.controller = record.value3;
+  domainRecord.royaltyAmount = record.value4;
+  domainRecord.parentId = record.value5.toHex();
+  domainRecord.subdomainContract = record.value6.toHex();
+  // domain groups
+  const domainGroupId1 = domainGroupId(registrar, record.value7);
+  domainRecord.domainGroup = domainGroupId1;
+  domainRecord.domainGroupFileIndex = record.value8;
+}
