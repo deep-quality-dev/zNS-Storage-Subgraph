@@ -69,7 +69,7 @@ export function updateDomainRecord(
 
   const registrarInstance = Registrar.bind(registrar);
   const record = registrarInstance.records(domainRecord.domainId);
-  domainRecord.minter = record.value0;
+  domainRecord.minter = record.value0.toHex();
   domainRecord.metadataLocked = record.value1;
   domainRecord.metadataLockedBy = record.value2;
   domainRecord.controller = record.value3;

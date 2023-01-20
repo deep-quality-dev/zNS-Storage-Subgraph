@@ -10,17 +10,15 @@ import {
   MetadataLockChanged,
   MetadataLocked,
   MetadataUnlocked,
-  Registrar,
   RoyaltiesAmountChanged,
   Transfer,
 } from "../generated/Registrar/Registrar";
 import {
   Account,
   Controller,
-  DomainApproval,
   DomainApprovalForAll,
   DomainRecord,
-  DomainTransfer,
+  Operator,
   RegistrarContract,
 } from "../generated/schema";
 import {
@@ -34,34 +32,55 @@ import {
   approvalId as generateApprovalId,
   approvalForAllId as generateApprovalForAllId,
   toPaddedHexString,
-  updateDomainRecord,
   updateDomainRecordBlockStamp,
 } from "./utils";
 
-export function handleBlock(block: ethereum.Block): void {
-  if (block.number.equals(getDefaultRegistrarBlockForNetwork())) {
-    const rootAddress = getDefaultRegistrarForNetwork();
-    let registrarContract = RegistrarContract.load(rootAddress.toHex());
-    if (registrarContract) {
-      log.error("[handleInitialze] already created Registrar", []);
-      return;
-    }
-    registrarContract = new RegistrarContract(rootAddress.toHex());
-
-    // Fill Blockstamp
-    registrarContract.blockNumber = block.number.toI32();
-    registrarContract.blockHash = block.hash;
-    registrarContract.blockTimestamp = block.timestamp;
-    registrarContract.txHash = Bytes.fromI32(0);
-    registrarContract.txFrom = Address.zero();
-    registrarContract.txTo = Address.zero();
-    registrarContract.value = BigInt.fromI32(0);
-
-    registrarContract.rootDomain = "0x0";
-    registrarContract.save();
-    log.info("handler [handleBlock] root Registrar was created", []);
+function initializeDefaultRegistrar(event: ethereum.Event): void {
+  const rootAddress = getDefaultRegistrarForNetwork();
+  let registrarContract = RegistrarContract.load(rootAddress.toHex());
+  if (registrarContract) {
+    return;
   }
+  registrarContract = new RegistrarContract(rootAddress.toHex());
+
+  // Fill Blockstamp
+  registrarContract.blockNumber = event.block.number.toI32();
+  registrarContract.blockHash = event.block.hash;
+  registrarContract.blockTimestamp = event.block.timestamp;
+  registrarContract.txHash = Bytes.fromI32(0);
+  registrarContract.txFrom = Address.zero();
+  registrarContract.txTo = Address.zero();
+  registrarContract.value = BigInt.fromI32(0);
+
+  registrarContract.rootDomain = "0x0";
+  registrarContract.save();
+  log.info("handler [handleBlock] root Registrar was created", []);
 }
+
+// export function handleBlock(block: ethereum.Block): void {
+//   if (block.number.equals(getDefaultRegistrarBlockForNetwork())) {
+//     const rootAddress = getDefaultRegistrarForNetwork();
+//     let registrarContract = RegistrarContract.load(rootAddress.toHex());
+//     if (registrarContract) {
+//       log.error("[handleInitialze] already created Registrar", []);
+//       return;
+//     }
+//     registrarContract = new RegistrarContract(rootAddress.toHex());
+
+//     // Fill Blockstamp
+//     registrarContract.blockNumber = block.number.toI32();
+//     registrarContract.blockHash = block.hash;
+//     registrarContract.blockTimestamp = block.timestamp;
+//     registrarContract.txHash = Bytes.fromI32(0);
+//     registrarContract.txFrom = Address.zero();
+//     registrarContract.txTo = Address.zero();
+//     registrarContract.value = BigInt.fromI32(0);
+
+//     registrarContract.rootDomain = "0x0";
+//     registrarContract.save();
+//     log.info("handler [handleBlock] root Registrar was created", []);
+//   }
+// }
 
 export function handleDomainCreatedLegacy(event: DomainCreated): void {
   // log.info("handler [handleDomainCreatedLegacy] called, {}, {}, {}, {}", [
@@ -101,8 +120,8 @@ export function handleDomainCreatedLegacy(event: DomainCreated): void {
   // Fill Blockstamp
   updateDomainRecordBlockStamp(domainRecord, event);
 
-  // todo, owner
-  domainRecord.minter = event.params.minter;
+  domainRecord.owner = event.params.minter.toHex();
+  domainRecord.minter = event.params.minter.toHex();
   // domainRecord.metadataLocked = false;
   // domainRecord.metadataLockedBy = Address.zero();
   domainRecord.controller = event.params.controller;
@@ -149,7 +168,8 @@ export function handleDomainCreated(event: DomainCreated1): void {
   // Fill Blockstamp
   updateDomainRecordBlockStamp(domainRecord, event);
 
-  domainRecord.minter = event.params.minter;
+  domainRecord.owner = event.params.minter.toHex();
+  domainRecord.minter = event.params.minter.toHex();
   // domainRecord.metadataLocked = false;
   // domainRecord.metadataLockedBy = Address.zero();
   domainRecord.controller = event.params.controller;
@@ -299,7 +319,11 @@ export function handleDomainTransfer(event: Transfer): void {
   if (event.params.to.equals(Address.zero())) {
     store.remove("DomainRecord", domainId);
   } else if (event.params.from.equals(Address.zero())) {
+    initializeDefaultRegistrar(event);
+
     const domainRecord = new DomainRecord(domainId);
+
+    domainRecord.owner = event.params.to.toHex();
     domainRecord.domainId = event.params.tokenId;
     domainRecord.metadataLocked = false;
     domainRecord.royaltyAmount = BigInt.fromI32(0);
@@ -308,20 +332,20 @@ export function handleDomainTransfer(event: Transfer): void {
     domainRecord.save();
   }
 
-  const domainTransfer = new DomainTransfer(generateTransferId(event));
-  // Fill Blockstamp
-  domainTransfer.blockNumber = event.block.number.toI32();
-  domainTransfer.blockHash = event.block.hash;
-  domainTransfer.blockTimestamp = event.block.timestamp;
-  domainTransfer.txHash = event.transaction.hash;
-  domainTransfer.txFrom = event.transaction.from;
-  domainTransfer.txTo = event.transaction.to;
-  domainTransfer.value = event.transaction.value;
+  // const domainTransfer = new DomainTransfer(generateTransferId(event));
+  // // Fill Blockstamp
+  // domainTransfer.blockNumber = event.block.number.toI32();
+  // domainTransfer.blockHash = event.block.hash;
+  // domainTransfer.blockTimestamp = event.block.timestamp;
+  // domainTransfer.txHash = event.transaction.hash;
+  // domainTransfer.txFrom = event.transaction.from;
+  // domainTransfer.txTo = event.transaction.to;
+  // domainTransfer.value = event.transaction.value;
 
-  domainTransfer.from = event.params.from.toHex();
-  domainTransfer.to = event.params.to.toHex();
-  domainTransfer.tokenId = event.params.tokenId;
-  domainTransfer.save();
+  // domainTransfer.from = event.params.from.toHex();
+  // domainTransfer.to = event.params.to.toHex();
+  // domainTransfer.tokenId = event.params.tokenId;
+  // domainTransfer.save();
 }
 
 export function handleDomainApproval(event: Approval): void {
@@ -330,27 +354,45 @@ export function handleDomainApproval(event: Approval): void {
   const approvedAccount = new Account(event.params.approved.toHex());
   approvedAccount.save();
 
-  const domainApproval = new DomainApproval(generateApprovalId(event));
+  const domainId = toPaddedHexString(event.params.tokenId);
+  const domainRecord = DomainRecord.load(domainId);
+  if (!domainRecord) {
+    log.error("[handleDomainApproval] DomainRecord not exists {}", [domainId]);
+    // throw Error(`[handleDomainCreated] DomainRecord with domainId: ${domainId} not found.`);
+    return;
+  }
+  domainRecord.approveTo = event.params.approved.toHex();
   // Fill Blockstamp
-  domainApproval.blockNumber = event.block.number.toI32();
-  domainApproval.blockHash = event.block.hash;
-  domainApproval.blockTimestamp = event.block.timestamp;
-  domainApproval.txHash = event.transaction.hash;
-  domainApproval.txFrom = event.transaction.from;
-  domainApproval.txTo = event.transaction.to;
-  domainApproval.value = event.transaction.value;
+  updateDomainRecordBlockStamp(domainRecord, event);
+  domainRecord.save();
 
-  domainApproval.owner = event.params.owner.toHex();
-  domainApproval.approved = event.params.approved.toHex();
-  domainApproval.tokenId = event.params.tokenId;
-  domainApproval.save();
+  // const domainApproval = new DomainApproval(generateApprovalId(event));
+  // // Fill Blockstamp
+  // domainApproval.blockNumber = event.block.number.toI32();
+  // domainApproval.blockHash = event.block.hash;
+  // domainApproval.blockTimestamp = event.block.timestamp;
+  // domainApproval.txHash = event.transaction.hash;
+  // domainApproval.txFrom = event.transaction.from;
+  // domainApproval.txTo = event.transaction.to;
+  // domainApproval.value = event.transaction.value;
+
+  // domainApproval.owner = event.params.owner.toHex();
+  // domainApproval.approved = event.params.approved.toHex();
+  // domainApproval.tokenId = event.params.tokenId;
+  // domainApproval.save();
 }
 
 export function handleDomainApprovalForAll(event: ApprovalForAll): void {
+  const operator = new Operator(event.params.operator.toHex());
+
   const ownerAccount = new Account(event.params.owner.toHex());
+  if (event.params.approved) {
+    ownerAccount.operatorApproval = operator.id;
+    operator.save();
+  } else {
+    ownerAccount.operatorApproval = null;
+  }
   ownerAccount.save();
-  const operatorAccount = new Account(event.params.operator.toHex());
-  operatorAccount.save();
 
   const domainApprovalForAll = new DomainApprovalForAll(generateApprovalForAllId(event));
   // Fill Blockstamp

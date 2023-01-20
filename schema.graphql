@@ -21,7 +21,13 @@ type DomainRecord implements Blockstamp @entity {
   domainId: BigInt!
   name: String
   label: String
-  minter: Bytes
+  owner: Account
+  minter: Account
+  # _tokenApprovals
+  approveTo: Account
+  # _tokenURIs
+  tokenUri: String
+
   metadataLocked: Boolean
   metadataLockedBy: Bytes
   controller: Bytes
@@ -79,6 +85,16 @@ type RegistrarContract implements Blockstamp @entity {
 }
 
 type Account @entity {
+  id: ID!
+
+  ownedDomains: [DomainRecord!]! @derivedFrom(field: "owner")
+  mintedDomains: [DomainRecord!]! @derivedFrom(field: "minter")
+
+  # _operatorApprovals
+  operatorApproval: Operator
+}
+
+type Operator @entity {
   id: ID!
 }
 

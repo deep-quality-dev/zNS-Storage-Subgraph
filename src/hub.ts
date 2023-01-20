@@ -5,9 +5,11 @@ import {
   EEDomainCreatedV2,
   EEDomainCreatedV3,
   EEDomainGroupUpdatedV1,
+  EEMetadataChanged,
   EEMetadataLockChanged,
   EENewSubdomainRegistrar,
   EERoyaltiesAmountChanged,
+  EETransferV1,
 } from "../generated/ZNSHub/ZNSHub";
 import {
   domainGroupId as generateDomainGroupId,
@@ -37,6 +39,10 @@ export function handleDomainCreatedV2(event: EEDomainCreatedV2): void {
   if (!domainParent) {
     domainParent = new DomainRecord(parentId);
   }
+
+  domainRecord.owner = event.params.minter.toHex();
+  domainRecord.minter = event.params.minter.toHex();
+
   if (!domainParent.name) {
     domainRecord.name = event.params.label;
   } else {
@@ -71,6 +77,10 @@ export function handleDomainCreatedV3(event: EEDomainCreatedV3): void {
   if (!domainParent) {
     domainParent = new DomainRecord(parentId);
   }
+
+  domainRecord.owner = event.params.minter.toHex();
+  domainRecord.minter = event.params.minter.toHex();
+
   if (!domainParent.name) {
     domainRecord.name = event.params.label;
   } else {
@@ -83,7 +93,23 @@ export function handleDomainCreatedV3(event: EEDomainCreatedV3): void {
   domainRecord.save();
 }
 
-// export function handleMetadataChanged(event: EEMetadataChanged): void {}
+export function handleMetadataChanged(event: EEMetadataChanged): void {
+  // log.info("handler [handleMetadataChanged] called, {}, {}", [
+  //   event.params.registrar.toHex(),
+  //   event.params.id.toHex(),
+  //   event.params.uri,
+  // ]);
+
+  const domainId = toPaddedHexString(event.params.id);
+  let domainRecord = DomainRecord.load(domainId);
+  if (!domainRecord) {
+    log.error("[handleMetadataChanged] DomainRecord not exists {}", [domainId]);
+    return;
+  }
+
+  domainRecord.tokenUri = event.params.uri;
+  domainRecord.save();
+}
 
 export function handleMetadataLockChanged(event: EEMetadataLockChanged): void {
   // log.info("handler [handleMetadataLockChanged] called, {}, {}", [
@@ -141,7 +167,39 @@ export function handleRoyaltiesAmountChanged(event: EERoyaltiesAmountChanged): v
   domainRecord.save();
 }
 
-// export function handleTransferV1(event: EETransferV1): void {}
+export function handleDomainTransferV1(event: EETransferV1): void {
+  // log.info("handler [handleDomainTransferV1] called, {}, {}, {}, {}", [
+  //   event.params.registrar.toHex(),
+  //   event.params.from.toHex(),
+  //   event.params.to.toHex(),
+  //   event.params.tokenId.toHex(),
+  // ]);
+
+  const domainId = toPaddedHexString(event.params.tokenId);
+  let domainRecord = DomainRecord.load(domainId);
+  if (!domainRecord) {
+    domainRecord = new DomainRecord(domainId);
+  }
+  domainRecord.owner = event.params.to.toHex();
+
+  updateDomainRecord(domainRecord, event, event.params.registrar);
+  domainRecord.save();
+
+  // const domainTransfer = new DomainTransfer(generateTransferId(event));
+  // // Fill Blockstamp
+  // domainTransfer.blockNumber = event.block.number.toI32();
+  // domainTransfer.blockHash = event.block.hash;
+  // domainTransfer.blockTimestamp = event.block.timestamp;
+  // domainTransfer.txHash = event.transaction.hash;
+  // domainTransfer.txFrom = event.transaction.from;
+  // domainTransfer.txTo = event.transaction.to;
+  // domainTransfer.value = event.transaction.value;
+
+  // domainTransfer.from = event.params.from.toHex();
+  // domainTransfer.to = event.params.to.toHex();
+  // domainTransfer.tokenId = event.params.tokenId;
+  // domainTransfer.save();
+}
 
 export function handleDomainGroupUpdatedV1(event: EEDomainGroupUpdatedV1): void {
   // log.info("handler [handleDomainGroupUpdatedV1] called, {}, {}, {}", [
